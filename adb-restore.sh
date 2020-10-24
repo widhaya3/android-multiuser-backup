@@ -89,7 +89,7 @@ for AUID in $AUIDS; do
       if [ -z "$($AS pm list package $PKG)" ]; then
         printf "    Installing pkg.."
         #pm install $base/apks/$pkg.apk >/dev/null
-        $AS pm install $base/apks/$PKG.apk >/dev/null
+        $A install $LBASE/apks/$PKG.apk >/dev/null
         echo "    done."
       else
         echo "    pkg already installed.."
