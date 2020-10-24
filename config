@@ -1,7 +1,16 @@
 #!/bin/bash
 
-localtmpdir="/tmp"
-localdatadir="$localtmpdir/amu-backup"
-devtmpdir="/sdcard"
-devdatadir="$devtmpdir/amu-backup"
+#DEVICE=xxxxxxxxxxxxxxxx
+A0=`which adb`
+#A="$A0 -s $DEVICE"
+#AS="$A shell"
 
+#localtmpdir="/tmp"
+#localdatadir="$localtmpdir/amu-backup"
+#LTMPDIR=/tmp
+LDATADIR="$LTMPDIR/amu-backup"
+LBASE=$LDATADIR
+
+#devtmpdir="/sdcard"
+#devdatadir="$devtmpdir/amu-backup"
+#NOT USE
