@@ -1,13 +1,11 @@
 #!/bin/bash
-#*** RUN IN LINUX SHELL ***
 
 . $(dirname $0)/config
 
 function usage {
 	echo "usage: $0 DEVICE USER_ID|all PACKAGES...|all"
-	echo "exam1: $0 XXXXXXXXXXXXXXXX all all"
-	echo "exam2: $0 XXXXXXXXXXXXXXXX 0 com.google.android.youtube"
-	echo "step: adb-backup.sh -> boot recovery (or rooted) -> backup.sh"
+	echo "exam1: $0 XXXXXX all all"
+	echo "exam2: $0 XXXXXX 0 com.google.android.youtube"
 }
 if [ ! "$1" ]; then
 	usage
@@ -61,4 +59,4 @@ fi
 
 echo 
 echo "Next, reboot to TWRP-recovery (adb reboot recovery | adb reboot bootloader && fastboot boot twrp-xxxx)"
-echo "Then, run ./backup.sh $*"
+echo "Then, run $(dirname $0)/backup.sh $*"

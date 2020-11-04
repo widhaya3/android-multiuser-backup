@@ -1,13 +1,11 @@
 #!/bin/bash
-#*** RUN IN LINUX SHELL ***
 
 . $(dirname $0)/config
 
 function usage {
     echo "usage: $0 DEVICE USER_ID|all PACKAGES...|all"
-    echo "exam1: $0 XXXXXXXXXXXXXXXX all all"
-    echo "exam2: $0 XXXXXXXXXXXXXXXX 0 com.google.android.youtube"
-	echo "step: adb-restore.sh -> reboot recovery (or rooted) -> restore.sh"
+    echo "exam1: $0 XXXXXX all all"
+    echo "exam2: $0 XXXXXX 0 com.google.android.youtube"
 }
 if [ ! "$1" ]; then
     usage
@@ -24,11 +22,13 @@ DEVICE=$1
 shift
 AUID=$1
 shift
-PKG=$1
+PKGS=$*
+UPKGS=$PKGS
+ALL_PKGS=0
 
 #if [ -z "$uid" -o -z "$pkg" ]; then
-if [ -z "$DEVICE" -o -z "$AUID" -o -z "$PKG" ]; then
-  echo "Usage $0 <DEVICE> <AUID> <PKG>"
+if [ -z "$AUID" -o -z "$PKGS" ]; then
+  usage
   exit 0
 fi
 
@@ -41,7 +41,6 @@ LBASE="$LDATADIR"
 #cd /data
 #pkgs="$*"
 #uids=$uid
-PKGS="$*"
 AUIDS="$AUID"
 
 $AS mount -a
@@ -62,6 +61,7 @@ if [ "$PKG" = "all" ]; then
   #  adb shell "pm list package -e --user \$AUID | cut -f2 -d':' > $LBASE/puser.txt"
   #PKGS="$(pm list packages | cut -f2 -d':')"
   PKGS="`cat $LBASE/pall.txt`"
+  ALL_PKGS=1
 fi
 
 #if [ "$uid" = "all" ]; then
@@ -77,7 +77,9 @@ fi
 #for uid in $uids; do
 for AUID in $AUIDS; do
   printf "Restoring backup for uid $uid.."
-  UPKGS="`cat $LBASE/puser_$AUID.txt`"
+  if [ $ALL_PKGS -eq 1 ]; then
+    UPKGS="`cat $LBASE/puser_$AUID.txt`"
+  fi
   #for pkg in $pkgs; do
   for PKG in $UPKGS; do
 ############# IN NORMAL BOOT #####################
@@ -113,7 +115,14 @@ for AUID in $AUIDS; do
     if [ -f "$LBASE/data/$AUID/$PKG-user.tar" ]; then
       printf "    Getting uid/gid and secontext.."
       #secontext=$(ls -dZ user/$uid/$pkg | cut -f1 -d' ')
-      SECONTEXT=$($AS "ls -dZ /data/user/$AUID/$PKG" | awk '{ print $2 }')
+      SECONTEXT=$($AS "ls -dZ /data/user/$AUID/$PKG" | awk '{ print $1 }')
+      if [ "${SECONTEXT:0:1}" != "u" ]; then	#OLD ANDROID
+        SECONTEXT=$($AS "ls -dZ /data/user/$AUID/$PKG" | awk '{ print $2 }')
+      fi
+if [ "${SECONTEXT:0:1}" != "u" ]; then
+  echo "SECONTEXT=$SECONTEXT, ls -dZ /data/user/$AUID/$PKG=$($AS ls -dZ /data/user/$AUID/$PKG)"
+  exit 1
+fi
       #user=$(ls -dl user/$uid/$pkg | cut -f3 -d' ')
       AUSER=$($AS "ls -dl /data/user/$AUID/$PKG" | awk '{ print $3 }')
       #group=$(ls -dl user/$uid/$pkg | cut -f4 -d' ')

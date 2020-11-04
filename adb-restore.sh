@@ -1,13 +1,11 @@
-#!/bin/bash
-#*** RUN IN LINUX SHELL ***
+#!/bin/bash +x
 
 . $(dirname $0)/config
 
 function usage {
 	echo "usage: $0 DEVICE USER_ID|all PACKAGES...|all"
-	echo "exam1: $0 XXXXXXXXXXXXXXXX all all"
-	echo "exam2: $0 XXXXXXXXXXXXXXXX 0 com.google.android.youtube"
-	echo "step: adb-restore.sh -> reboot recovery (or rooted) -> restore.sh"
+	echo "exam1: $0 XXXXXX all all"
+	echo "exam2: $0 XXXXXX 0 com.google.android.youtube"
 }
 if [ ! "$1" ]; then
 	usage
@@ -29,8 +27,8 @@ PKG=$1
 START_PKG=$PKG
 
 #if [ -z "$uid" -o -z "$pkg" ]; then
-if [ -z "$DEVICE" -o -z "$AUID" -o -z "$PKG" ]; then
-  echo "Usage $0 <DEVICE> <AUID> <PKG>"
+if [ -z "$AUID" -o -z "$PKG" ]; then
+  usage
   exit 0
 fi
 
@@ -44,7 +42,9 @@ LBASE="$LDATADIR"
 #pkgs="$*"
 #uids=$uid
 PKGS="$*"
+UPKGS=$PKGS
 AUIDS="$AUID"
+ALL_PKGS=0
 
 # Backup all installed packages?
 ##if [ "$pkg" = "all" ]; then
@@ -55,13 +55,14 @@ AUIDS="$AUID"
 #    pkgs="$pkgs ${file%\.apk}"
 #  done
 #fi
-if [ "$PKG" = "all" ]; then
+if [ "$PKGS" = "all" ]; then
   #pkgs="$(pm list packages | cut -f2 -d':')"
   #PRE-REQUISITE BEFORE ENTER RECOVERY:
   #  adb shell "pm list packages | cut -f2 -d':' > $LBASE/pall.txt"
   #  adb shell "pm list package -e --user \$AUID | cut -f2 -d':' > $LBASE/puser.txt"
   #PKGS="$(pm list packages | cut -f2 -d':')"
   PKGS="`cat $LBASE/pall.txt`"
+  ALL_PKGS=1
 fi
 
 #if [ "$uid" = "all" ]; then
@@ -76,24 +77,40 @@ fi
 
 #for uid in $uids; do
 for AUID in $AUIDS; do
-  printf "Restoring backup for uid $uid.."
-  UPKGS="`cat $LBASE/puser_$AUID.txt`"
+  printf "Restoring backup for uid $AUID.."
+  if [ $ALL_PKGS -eq 1 ]; then
+    UPKGS="`cat $LBASE/puser_$AUID.txt`"
+  fi
   #for pkg in $pkgs; do
   for PKG in $UPKGS; do
     #[ -z "$pkg" ] && ( echo "Missing pkg"; exit 1)
     [ -z "$PKG" ] && ( echo "Missing pkg"; exit 1)
     printf "  Restoring pkg $PKG.."
     #if [ -f "$base/apks/$pkg.apk" ]; then
-    if [ -f "$LBASE/apks/$PKG.apk" ]; then
-      #if [ -z "$(pm list package $pkg)" ]; then
-      if [ -z "$($AS pm list package $PKG)" ]; then
-        printf "    Installing pkg.."
-        #pm install $base/apks/$pkg.apk >/dev/null
-        $A install $LBASE/apks/$PKG.apk >/dev/null
-        echo "    done."
-      else
+	#FIX MULTIPLE APKS
+    #if [ -f "$LBASE/apks/$PKG.apk" ]; then
+    if [ -d "$LBASE/apks/$PKG" ] || [ -f "$LBASE/apks/$PKG.apk" ]; then
+#      #if [ -z "$(pm list package $pkg)" ]; then
+#      if [ -z "$($AS pm list package $PKG)" ]; then
+#        printf "    Installing pkg.."
+#        #pm install $base/apks/$pkg.apk >/dev/null
+#        $A install $LBASE/apks/$PKG.apk >/dev/null
+#        echo "    done."
+#      else
+#        echo "    pkg already installed.."
+#      fi
+      if [ "$($AS pm list package $PKG)" ]; then
         echo "    pkg already installed.."
+      else
+        printf "    Installing pkg.."
+        if [ -d "$LBASE/apks/$PKG" ];	#MULTIPLE APKS
+          $A install-multiple $LBASE/apks/$PKG/*apk >/dev/null
+        else	#SINGLE APK
+          $A install $LBASE/apks/$PKG.apk >/dev/null
+        fi
+        echo "    done."
       fi
+
       #if [ -f "$base/data/$uid/$pkg.disabled" ]; then
       if [ -f "$LBASE/data/$AUID/$PKG.disabled" ]; then
         printf "    Disabling pkg.."

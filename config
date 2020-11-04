@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#DEVICE=xxxxxxxxxxxxxxxx
+#DEVICE=XXXXXX
 A0=`which adb`
 #A="$A0 -s $DEVICE"
 #AS="$A shell"
 
 #localtmpdir="/tmp"
 #localdatadir="$localtmpdir/amu-backup"
-#LTMPDIR=/tmp
+LTMPDIR=/tmp
 LDATADIR="$LTMPDIR/amu-backup"
 LBASE=$LDATADIR
 
